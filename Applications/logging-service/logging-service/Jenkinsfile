@@ -1,0 +1,29 @@
+pipeline {
+  agent any
+
+  stages {
+
+    stage('Checkout') {
+      steps {
+        git credentialsId: 'github-creds',
+            url: 'https://github.com/AnadictMathew/my-codes.git'
+      }
+    }
+
+    stage('Build JAR') {
+      steps {
+        dir('Applications/logging-service/logging-service') {
+          sh 'mvn clean package -DskipTests'
+        }
+      }
+    }
+
+    stage('Docker Build') {
+      steps {
+        dir('Applications/logging-service/logging-service') {
+          sh 'docker build -t logging-service:1.0 .'
+        }
+      }
+    }
+  }
+}
