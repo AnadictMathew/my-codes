@@ -13,15 +13,18 @@ pipeline {
 
     stage('Build JAR') {
       steps {
-        sh 'mvn clean package -DskipTests'
+        dir('Applications/logging-service/logging-service') {
+          sh 'mvn clean package -DskipTests'
+        }
       }
     }
 
     stage('Docker Build') {
       steps {
-        sh 'docker build -t booking-service:latest .'
+        dir('Applications/logging-service/logging-service') {
+          sh 'docker build -t logging-service:1.0 .'
+        }
       }
     }
-
   }
 }
