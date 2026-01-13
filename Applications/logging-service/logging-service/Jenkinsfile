@@ -2,7 +2,9 @@ pipeline {
   agent any
 
   environment {
-    IMAGE_NAME = "logging-service"
+    IMAGE_NAME  = "logging-service"
+    AWS_REGION = "ap-south-1"
+    ECR_REPO   = "216261470305.dkr.ecr.ap-south-1.amazonaws.com/logging-service"
   }
 
   stages {
@@ -24,7 +26,7 @@ pipeline {
               returnStdout: true
             ).trim()
 
-            // FINAL IMAGE VERSION = 0.1.0.<BUILD_NUMBER>
+            // FINAL IMAGE VERSION → e.g. 1.0.9
             env.IMAGE_VERSION = "${env.BASE_VERSION}.${env.BUILD_NUMBER}"
           }
         }
@@ -47,6 +49,29 @@ pipeline {
             docker tag ${env.IMAGE_NAME}:${env.IMAGE_VERSION} ${env.IMAGE_NAME}:latest
           """
         }
+      }
+    }
+
+    stage('Login to AWS ECR') {
+      steps {
+        withAWS(credentials: 'aws-creds', region: "${env.AWS_REGION}") {
+          sh """
+            aws ecr get-login-password --region ${env.AWS_REGION} \
+            | docker login --username AWS --password-stdin 216261470305.dkr.ecr.ap-south-1.amazonaws.com
+          """
+        }
+      }
+    }
+
+    stage('Push Image to ECR') {
+      steps {
+        sh """
+          docker tag ${env.IMAGE_NAME}:${env.IMAGE_VERSION} ${env.ECR_REPO}:${env.IMAGE_VERSION}
+          docker tag ${env.IMAGE_NAME}:latest ${env.ECR_REPO}:latest
+
+          docker push ${env.ECR_REPO}:${env.IMAGE_VERSION}
+          docker push ${env.ECR_REPO}:latest
+        """
       }
     }
   }
