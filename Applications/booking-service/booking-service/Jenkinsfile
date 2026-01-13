@@ -2,8 +2,7 @@ pipeline {
   agent any
 
   environment {
-    IMAGE_NAME    = "booking-service"
-    IMAGE_VERSION = "1.0"   // change to 1.1, 1.2, etc.
+    IMAGE_NAME = "booking-service"
   }
 
   stages {
@@ -13,6 +12,20 @@ pipeline {
         git branch: 'main',
             credentialsId: 'github-creds',
             url: 'https://github.com/AnadictMathew/my-codes.git'
+      }
+    }
+
+    stage('Read Version') {
+      steps {
+        dir('Applications/booking-service/booking-service') {
+          script {
+            env.BASE_VERSION = sh(
+              script: "mvn help:evaluate -Dexpression=project.version -q -DforceStdout",
+              returnStdout: true
+            ).trim()
+            env.IMAGE_VERSION = "${env.BASE_VERSION}.${env.BUILD_NUMBER}"
+          }
+        }
       }
     }
 
