@@ -5,25 +5,23 @@ pipeline {
 
     stage('Checkout') {
       steps {
-        git credentialsId: 'github-creds',
+        git branch: 'main',
+            credentialsId: 'github-creds',
             url: 'https://github.com/AnadictMathew/my-codes.git'
       }
     }
 
     stage('Build JAR') {
       steps {
-        dir('Applications/logging-service/logging-service') {
-          sh 'mvn clean package -DskipTests'
-        }
+        sh 'mvn clean package -DskipTests'
       }
     }
 
     stage('Docker Build') {
       steps {
-        dir('Applications/logging-service/logging-service') {
-          sh 'docker build -t logging-service:1.0 .'
-        }
+        sh 'docker build -t booking-service:latest .'
       }
     }
+
   }
 }
